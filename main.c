@@ -30,8 +30,8 @@ struct ytree {
 	struct tree_val *object;
 	struct ytree *next;
 	struct ytree *prev;
-	struct ytree *child;
-	struct ytree *parent;
+	struct ytree *right;
+	struct ytree *left;
 };
 
 struct tree_list {
@@ -97,16 +97,16 @@ struct ytree* tree_iterNext (struct tree_iter *self) {
 
 void tree_join(struct ytree *cur, struct ytree *node) {
     if (cur->key[0] < node->key[0]) {
-        if (!cur->child)
-            cur->child = node;
+        if (!cur->right)
+            cur->right = node;
         else
-            tree_join(cur->child, node);
+            tree_join(cur->right, node);
     }
     else {
-        if (!cur->parent)
-            cur->parent = node;
+        if (!cur->left)
+            cur->left = node;
         else
-            tree_join(cur->parent, node);
+            tree_join(cur->left, node);
     }
 }
 
@@ -161,15 +161,15 @@ struct ytree* search_tree(struct ytree *cur, char *query) {
         return cur;
     }
     if (cur->key[0] < query[0]) {
-        if (cur->child)
-            cur = search_tree(cur->child, query);
+        if (cur->right)
+            cur = search_tree(cur->right, query);
         else
             cur = NULL;
         return cur;
     }
     else {
-        if (cur->parent)
-            cur = search_tree(cur->parent, query);
+        if (cur->left)
+            cur = search_tree(cur->left, query);
         else
             cur = NULL;
         return cur;
