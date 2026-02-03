@@ -58,18 +58,18 @@ void del_tree_list (struct tree_list *self) {
 };
 
 void del_object (struct tree_val *object) {
-    if (object->union_type == 0) {
+    if (object->union_type == string) {
         free(object->value->cval);
     }
-    else if (object->union_type == 1) {
+    else if (object->union_type == tree) {
         del_tree_list(object->value->yval);
     }
-    else if (object->union_type == 2){
+    else if (object->union_type == array){
         for(int i=0;object->value->aval[i] !=NULL; i++) {
             free(object->value->aval[i]);
         }
     }
-    else if (object->union_type == 3){
+    else if (object->union_type == y_array){
         for(int i=0;object->value->yaval[i] !=NULL; i++) {
         del_tree_list(object->value->yaval[i]);
         }
@@ -184,19 +184,19 @@ void print_tree(struct tree_list *ylist, int stat_ind, int cur_ind) {
 	while(1) {
 		cur = yiter->next(yiter);
 	  	if (cur == NULL) break;
-		if (cur->object->union_type == 0) {
+		if (cur->object->union_type == string) {
 			if (cur_ind > 0) for (i=0; i < cur_ind; i++) printf(" ");
 			printf("\e[1;%dm%s :\e[0m %s", color, cur->key, cur->object->value->cval);
             char *n_test = cur->object->value->cval;
             if (n_test[strlen(n_test) - 1] != '\n')
                 printf("\n");                
 		}
-		else if (cur->object->union_type == 1) {
+		else if (cur->object->union_type == tree) {
 			if (cur_ind > 0) for (i=0; i < cur_ind; i++) printf(" ");
 			printf("\e[1;%dm%s :\e[0m\n", color, cur->key);
 			print_tree(cur->object->value->yval, stat_ind, cur_ind + stat_ind);
 		}
-		else if (cur->object->union_type == 2){
+		else if (cur->object->union_type == array){
 			if (cur_ind > 0) for (i=0; i < cur_ind; i++) printf(" ");
 			printf("\e[1;%dm%s :\e[0m\n", color, cur->key);
             for(i=0;cur->object->value->aval[i] !=NULL; i++) {
@@ -207,7 +207,7 @@ void print_tree(struct tree_list *ylist, int stat_ind, int cur_ind) {
                     printf("\n");                
 			}
 		}
-        else if (cur->object->union_type == 3){
+        else if (cur->object->union_type == y_array){
 			if (cur_ind > 0) for (i=0; i < cur_ind; i++) printf(" ");
             printf("\e[1;%dm%s :\e[0m\n", color, cur->key);
             for(i=0;cur->object->value->yaval[i] !=NULL; i++) {
@@ -265,7 +265,7 @@ char* analyze_tree(struct tree_list *ylist, char *query, bool embedded) {
             return NULL;
         }
         if (query[0] == '[') {
-            if (cur->object->union_type == 2 || cur->object->union_type == 3) {
+            if (cur->object->union_type == array || cur->object->union_type == y_array) {
                 bool neg = false;
                 query++;
                 if (query[0] == '-' ) {
@@ -287,7 +287,7 @@ char* analyze_tree(struct tree_list *ylist, char *query, bool embedded) {
                         break;
                     }
                     if (query[0] == ']') {
-                        if (cur->object->union_type == 2) {
+                        if (cur->object->union_type == array) {
                             for(int j=0;cur->object->value->aval[j] !=NULL; j++) 
                                 a_length++;
                             if (numval < a_length || neg && numval <= a_length){
@@ -309,7 +309,7 @@ char* analyze_tree(struct tree_list *ylist, char *query, bool embedded) {
                             }
                             query++;
                         }
-                        if (cur->object->union_type == 3) {
+                        if (cur->object->union_type == y_array) {
                             for(int j=0;cur->object->value->yaval[j] !=NULL; j++) 
                                 a_length++;
                             if (numval < a_length || neg && numval <= a_length){
@@ -355,7 +355,7 @@ char* analyze_tree(struct tree_list *ylist, char *query, bool embedded) {
         for (;query[0] == ' ' || query[0] == '\t'; query++) {}
 
         if (query[0] == '\0' || query[0] == '\n') {
-            if (cur->object->union_type == 0) {
+            if (cur->object->union_type == string) {
                 printf("\e[%dm%s :\e[0m %s", color, cur->key, cur->object->value->cval);
                 char *n_test = cur->object->value->cval;
                 if (n_test[strlen(n_test) - 1] != '\n')
@@ -363,13 +363,13 @@ char* analyze_tree(struct tree_list *ylist, char *query, bool embedded) {
                 printed = true;
                 break;
             }
-            else if (cur->object->union_type == 1) {
+            else if (cur->object->union_type == tree) {
                 printf("\e[1;%dm%s :\e[0m\n", color, cur->key);
                 print_tree(cur->object->value->yval, def_ind, def_ind);
                 printed = true;
                 break;
             }
-            else if (cur->object->union_type == 2){
+            else if (cur->object->union_type == array){
                 printf("\e[1;%dm%s :\e[0m\n", color, cur->key);
                 for(i=a_start;cur->object->value->aval[i] != a_end; i++) {
     				for (int j=0; j < def_ind; j++) printf(" ");
@@ -381,7 +381,7 @@ char* analyze_tree(struct tree_list *ylist, char *query, bool embedded) {
                 printed = true;
                 break;
             }
-            else if (cur->object->union_type == 3){
+            else if (cur->object->union_type == y_array){
                 printf("\e[1;%dm%s :\e[0m\n", color, cur->key);
                 for(i=a_start;cur->object->value->yaval[i] != ya_end; i++) {
     				for (int j=0; j < def_ind; j++) printf(" ");
@@ -461,12 +461,12 @@ char* analyze_tree(struct tree_list *ylist, char *query, bool embedded) {
         }
 
         if (query[0] == '.') {
-            if (cur->object->union_type == 1) {
+            if (cur->object->union_type == tree) {
                 query = analyze_tree(cur->object->value->yval, query, true);
                 if (query == NULL)
                     return NULL;
             }
-            else if (cur->object->union_type == 3 && y_ap == true) {
+            else if (cur->object->union_type == y_array && y_ap == true) {
                 query = analyze_tree(cur->object->value->yaval[a_start], query, true);
                 if (query == NULL)
                     return NULL;
